@@ -1,101 +1,99 @@
-import Image from "next/image";
+'use client'
+
+import { PlayerHand } from "./components/PlayerHand";
+import { GameBoard } from "./components/GameBoard";
+import { deck as initialDeck } from "./data";
+import { useEffect, useState } from "react";
+import { getRandomCards } from "./utils/getRandomCards";
+import { Card } from "./types";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+  const [deck, setDeck] = useState<Card[]>(initialDeck);
+  const [playerCards, setPlayerCards] = useState<Card[]>([]);
+  const [enemyCards, setEnemyCards] = useState<Card[]>([]);
+  const [playAreaCards, setPlayAreaCards] = useState<Card[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const dealCards = () => {
+    const [plCards, newDeckAfterPlayer] = getRandomCards({ deck, num: 4 });
+    setPlayerCards(plCards);
+
+    const [enCards, newDeckAfterEnemy] = getRandomCards({ deck: newDeckAfterPlayer, num: 4 });
+    setEnemyCards(enCards);
+    setDeck(newDeckAfterEnemy);
+  };
+
+  useEffect(() => {
+    dealCards();
+  }, []);
+
+  const handlePlayerMove = (card: Card) => {
+    if(!isPlayerTurn) {
+      return;
+    }
+    const updatedPlayAreaCards = [...playAreaCards, card];
+    const updatedPlayerCards = playerCards.filter((card_) => card_.path !== card.path);
+    let updatedDeck = [...deck];
+    let newPlayerCard: Card | null = null;
+
+    if (updatedDeck.length > 1) {
+      newPlayerCard = updatedDeck[updatedDeck.length - 2];
+      updatedDeck = [...updatedDeck.slice(0, -2), updatedDeck.at(-1)!];
+    } else if (updatedDeck.length === 1) {
+      newPlayerCard = updatedDeck[0];
+      updatedDeck = [];
+    }
+
+    if (newPlayerCard) {
+      updatedPlayerCards.push(newPlayerCard);
+    }
+
+    setPlayAreaCards(updatedPlayAreaCards);
+    setPlayerCards(updatedPlayerCards);
+    setDeck(updatedDeck);
+
+    setIsPlayerTurn(false);
+    setTimeout(() => {
+      handleEnemyMove(updatedPlayAreaCards, updatedDeck);
+      setIsPlayerTurn(true);
+    }, 1000);
+  };
+
+  const handleEnemyMove = (updatedPlayAreaCards: Card[], updatedDeck: Card[]) => {
+    if (enemyCards.length === 0) {
+      console.log("No cards left for the enemy to play");
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * enemyCards.length);
+    const randomCard = enemyCards[randomIndex];
+    updatedPlayAreaCards = [...updatedPlayAreaCards, randomCard];
+
+    const updatedEnemyCards = enemyCards.filter((_, index) => index !== randomIndex);
+    let newEnemyCard: Card | null = null;
+
+    if (updatedDeck.length > 1) {
+      newEnemyCard = updatedDeck[updatedDeck.length - 2];
+      updatedDeck = [...updatedDeck.slice(0, -2), updatedDeck.at(-1)!];
+    } else if (updatedDeck.length === 1) {
+      newEnemyCard = updatedDeck[0];
+      updatedDeck = [];
+    }
+
+    if (newEnemyCard) {
+      updatedEnemyCards.push(newEnemyCard);
+    }
+
+    setPlayAreaCards(updatedPlayAreaCards);
+    setEnemyCards(updatedEnemyCards);
+    setDeck(updatedDeck);
+  };
+
+  return (
+    <div className="h-full bg-green-700 flex flex-col">
+      <PlayerHand cards={enemyCards} />
+      <GameBoard playAreaCards={playAreaCards} trump="H" deck={deck} />
+      <PlayerHand cards={playerCards} handleMove={handlePlayerMove} isMainPlayer />
     </div>
   );
 }
