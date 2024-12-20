@@ -1,99 +1,33 @@
-'use client'
+"use client";
 
-import { PlayerHand } from "./components/PlayerHand";
-import { GameBoard } from "./components/GameBoard";
-import { deck as initialDeck } from "./data";
-import { useEffect, useState } from "react";
-import { getRandomCards } from "./utils/getRandomCards";
-import { Card } from "./types";
+import { Play } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [isPlayerTurn, setIsPlayerTurn] = useState(true);
-  const [deck, setDeck] = useState<Card[]>(initialDeck);
-  const [playerCards, setPlayerCards] = useState<Card[]>([]);
-  const [enemyCards, setEnemyCards] = useState<Card[]>([]);
-  const [playAreaCards, setPlayAreaCards] = useState<Card[]>([]);
+  const router = useRouter();
 
-  const dealCards = () => {
-    const [plCards, newDeckAfterPlayer] = getRandomCards({ deck, num: 4 });
-    setPlayerCards(plCards);
-
-    const [enCards, newDeckAfterEnemy] = getRandomCards({ deck: newDeckAfterPlayer, num: 4 });
-    setEnemyCards(enCards);
-    setDeck(newDeckAfterEnemy);
-  };
-
-  useEffect(() => {
-    dealCards();
-  }, []);
-
-  const handlePlayerMove = (card: Card) => {
-    if(!isPlayerTurn) {
-      return;
-    }
-    const updatedPlayAreaCards = [...playAreaCards, card];
-    const updatedPlayerCards = playerCards.filter((card_) => card_.path !== card.path);
-    let updatedDeck = [...deck];
-    let newPlayerCard: Card | null = null;
-
-    if (updatedDeck.length > 1) {
-      newPlayerCard = updatedDeck[updatedDeck.length - 2];
-      updatedDeck = [...updatedDeck.slice(0, -2), updatedDeck.at(-1)!];
-    } else if (updatedDeck.length === 1) {
-      newPlayerCard = updatedDeck[0];
-      updatedDeck = [];
-    }
-
-    if (newPlayerCard) {
-      updatedPlayerCards.push(newPlayerCard);
-    }
-
-    setPlayAreaCards(updatedPlayAreaCards);
-    setPlayerCards(updatedPlayerCards);
-    setDeck(updatedDeck);
-
-    setIsPlayerTurn(false);
-    setTimeout(() => {
-      handleEnemyMove(updatedPlayAreaCards, updatedDeck);
-      setIsPlayerTurn(true);
-    }, 1000);
-  };
-
-  const handleEnemyMove = (updatedPlayAreaCards: Card[], updatedDeck: Card[]) => {
-    if (enemyCards.length === 0) {
-      console.log("No cards left for the enemy to play");
-      return;
-    }
-
-    const randomIndex = Math.floor(Math.random() * enemyCards.length);
-    const randomCard = enemyCards[randomIndex];
-    updatedPlayAreaCards = [...updatedPlayAreaCards, randomCard];
-
-    const updatedEnemyCards = enemyCards.filter((_, index) => index !== randomIndex);
-    let newEnemyCard: Card | null = null;
-
-    if (updatedDeck.length > 1) {
-      newEnemyCard = updatedDeck[updatedDeck.length - 2];
-      updatedDeck = [...updatedDeck.slice(0, -2), updatedDeck.at(-1)!];
-    } else if (updatedDeck.length === 1) {
-      newEnemyCard = updatedDeck[0];
-      updatedDeck = [];
-    }
-
-    if (newEnemyCard) {
-      updatedEnemyCards.push(newEnemyCard);
-    }
-
-    setPlayAreaCards(updatedPlayAreaCards);
-    setEnemyCards(updatedEnemyCards);
-    setDeck(updatedDeck);
+  const redirectToGame = () => {
+    router.push("/game");
   };
 
   return (
-    <div className="h-full bg-green-700 flex flex-col">
-      <PlayerHand cards={enemyCards} />
-      <GameBoard playAreaCards={playAreaCards} trump="H" deck={deck} />
-      <PlayerHand cards={playerCards} handleMove={handlePlayerMove} isMainPlayer />
+    <div className="bg-green-700 h-full flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-6xl  font-extrabold text-yellow-500 mb-8">
+          Welcome to Belt Game!
+        </h1>
+        <div className="flex gap-4 justify-center">
+          <button
+            className="bg-yellow-500 text-green-700 text-xl  py-2 px-6 rounded-full shadow-md hover:bg-yellow-600 transition duration-300 font-semibold"
+            onClick={redirectToGame}
+          >
+            <div className="flex gap-3">
+              <Play />
+              <span>Play</span>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

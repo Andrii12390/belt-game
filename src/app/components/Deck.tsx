@@ -6,30 +6,33 @@ interface DeckProps {
 }
 
 export const Deck = ({ deck }: DeckProps) => {
+  const cardsLeft = (deck.length - 1).toString().padStart(2, '0')
   return (
     <div className="w-[20%] flex justify-center items-center gap-2">
       <div className="relative">
         {deck.length - 1 > 0 ? (
           <>
-            <Image src="/BACK.png" alt="trump" height={95} width={65} />
-            <div className="absolute -top-6 left-5 font-extrabold text-yellow-600">
-              {deck.length - 1}
+            <Image src="/BACK.png" alt="trump" height={105} width={75} />
+            <div className="absolute -top-7 inset-x-6 font-bold text-xl text-yellow-500">
+              {cardsLeft}
             </div>
           </>
-        )
-          :(
-            <div className="flex h-[95px] w-[65px] border-2 border-yellow-600 border-dashed rounded-md text-yellow-600 font-bold justify-center items-center">
-              0
-            </div>
-          )
-        }
+        ) : (
+          <div className="flex h-[105px] w-[75px] border-2 border-yellow-500 border-dashed rounded-md text-yellow-400 font-bold justify-center items-center">
+            0
+          </div>
+        )}
       </div>
       {deck.length >= 1 ? (
-        <Image src={deck.at(-1)?.path || ''} alt="trump" height={95} width={65} />
+        <Image
+          src={deck.at(-1)?.path || ""}
+          alt="trump"
+          height={105}
+          width={75}
+        />
       ) : (
         <div className="h-[95px] w-[65px]"></div>
-      )
-    }
+      )}
     </div>
-  )
-}
+  );
+};
