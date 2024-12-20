@@ -13,12 +13,11 @@ import { useRouter } from "next/navigation";
 interface IGameBoardProps {
   playAreaCards: Card[];
   deck: Card[];
-  trump: string;
   highlightedCards: Card[];
   onCardClick: (card: Card) => void;
 }
 
-export const GameBoard = ({ playAreaCards, deck, trump, highlightedCards, onCardClick } : IGameBoardProps) => {
+export const GameBoard = ({ playAreaCards, deck, highlightedCards, onCardClick } : IGameBoardProps) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const router = useRouter();
     const toggleDrawer = () => {

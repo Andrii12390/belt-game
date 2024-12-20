@@ -1,21 +1,16 @@
-"use client";
+'use client'
+
 import { PlayerHand } from "../components/PlayerHand";
 import { GameBoard } from "../components/GameBoard";
 import { deck as initialDeck } from "../data";
-import { useGameLogic } from "../hooks/useGame";
+import { useGame } from "../hooks/useGame";
 
 export default function Game() {
   const {
-    highlightedPlayAreaCards,
-    deck,
-    playerCards,
-    enemyCards,
-    playAreaCards,
-    score,
-    message,
-    handlePlayerMove,
-    handleTakeCombination,
-  } = useGameLogic(initialDeck);
+    highlightedPlayAreaCards, deck, playerCards, enemyCards,
+    playAreaCards,  score, message, handlePlayerMove,
+    handleTakeCombination
+  } = useGame(initialDeck);
 
   return (
     <div className="h-full bg-green-700 flex flex-col p-2 relative">
@@ -28,14 +23,13 @@ export default function Game() {
         Score: {score[0]} | {score[1]}
       </aside>
 
-      <PlayerHand cards={enemyCards} isMainPlayer />
-
+      <PlayerHand cards={enemyCards} isMainPlayer={false} />
+      
       <GameBoard
         playAreaCards={playAreaCards}
         highlightedCards={highlightedPlayAreaCards}
-        trump="H"
         deck={deck}
-        onCardClick={handleTakeCombination}
+        onCardClick={handleTakeCombination} 
       />
       <PlayerHand
         cards={playerCards}

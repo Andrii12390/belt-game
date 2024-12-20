@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getRandomCards } from "../utils/getRandomCards";
 import { Card } from "../types";
 
-export function useGameLogic(initialDeck: Card[]) {
+export function useGame(initialDeck: Card[]) {
   const [highlightedPlayAreaCards, setHighlightedPlayAreaCards] = useState<Card[]>([]);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
   const [deck, setDeck] = useState<Card[]>(initialDeck);
@@ -14,7 +14,7 @@ export function useGameLogic(initialDeck: Card[]) {
   const [score, setScore] = useState([0, 0]);
   const [message, setMessage] = useState("");
 
-  const getHighlightedPlayAreaCards = (): Card[] => {
+  const getHighlightedPlayAreaCards = useCallback((): Card[] => {
     if (playAreaCards.length < 3) {
       return [];
     }
@@ -57,11 +57,22 @@ export function useGameLogic(initialDeck: Card[]) {
       });
     });
     return highlightedCards;
-  };
+  }, [playAreaCards, playerCards]);
 
   useEffect(() => {
     setHighlightedPlayAreaCards(getHighlightedPlayAreaCards());
-  }, [playAreaCards, playerCards]);
+  }, [playAreaCards, playerCards, getHighlightedPlayAreaCards]);
+
+  const dealCards = useCallback(() => {
+    const [plCards, newDeckAfterPlayer] = getRandomCards({ deck: initialDeck, num: 4 });
+    setPlayerCards(plCards);
+    const [enCards, newDeckAfterEnemy] = getRandomCards({
+      deck: newDeckAfterPlayer,
+      num: 4,
+    });
+    setEnemyCards(enCards);
+    setDeck(newDeckAfterEnemy);
+  }, [initialDeck]);
 
   useEffect(() => {
     if ((enemyCards.length === 0 || playerCards.length === 0) && playAreaCards.length) {
@@ -82,22 +93,11 @@ export function useGameLogic(initialDeck: Card[]) {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [enemyCards, playerCards]);
-
-  const dealCards = () => {
-    const [plCards, newDeckAfterPlayer] = getRandomCards({ deck: initialDeck, num: 4 });
-    setPlayerCards(plCards);
-    const [enCards, newDeckAfterEnemy] = getRandomCards({
-      deck: newDeckAfterPlayer,
-      num: 4,
-    });
-    setEnemyCards(enCards);
-    setDeck(newDeckAfterEnemy);
-  };
+  }, [enemyCards, playerCards, playAreaCards.length, playerScore, enemyScore, dealCards]);
 
   useEffect(() => {
     dealCards();
-  }, []);
+  }, [dealCards]);
 
   const handlePlayerMove = (card: Card) => {
     if (!isPlayerTurn) return;
@@ -141,7 +141,7 @@ export function useGameLogic(initialDeck: Card[]) {
     const usedPlayerCards = playerCards.filter((card) => card.value > clickedCard.value).slice(0, 3);
     const updatedPlayerCards = playerCards.filter((card) => !usedPlayerCards.includes(card));
 
-    let updatedDeck = [...deck];
+    const updatedDeck = [...deck];
     const newPlayerCards: Card[] = [];
     while (newPlayerCards.length < 3 && updatedDeck.length > 0) {
       newPlayerCards.push(updatedDeck.pop()!);
@@ -154,49 +154,7 @@ export function useGameLogic(initialDeck: Card[]) {
     setPlayerScore((prev) => prev + 1);
   };
 
-  useEffect(() => {
-    const botMoveInterval = setInterval(() => {
-      checkAndHandleBotCombination();
-    }, 5000);
-  
-    return () => clearInterval(botMoveInterval); 
-  }, [playAreaCards, enemyCards, deck]);
-  
-  const handleEnemyMove = (updatedPlayAreaCards: Card[], updatedDeck: Card[]) => {
-    if (enemyCards.length === 0) {
-      console.log("У ворога немає карт для ходу.");
-      return;
-    }
-  
-    const cardGroups = enemyCards.reduce<Record<number, Card[]>>((groups, card) => {
-      if (!groups[card.value]) groups[card.value] = [];
-      groups[card.value].push(card);
-      return groups;
-    }, {});
-  
-    const worstCard = Object.entries(cardGroups)
-      .sort((a, b) => {
-        if (a[1].length !== b[1].length) return a[1].length - b[1].length;
-  
-        return parseInt(a[0], 10) - parseInt(b[0], 10);
-      })
-      .map(([_, cards]) => cards[0])[0]; 
-  
-    updatedPlayAreaCards = [...updatedPlayAreaCards, worstCard];
-    const updatedEnemyCards = enemyCards.filter((card) => card !== worstCard);
-  
-    let newEnemyCard: Card | null = null;
-    if (updatedDeck.length > 0) {
-      newEnemyCard = updatedDeck.pop()!;
-      updatedEnemyCards.push(newEnemyCard);
-    }
-  
-    setPlayAreaCards(updatedPlayAreaCards);
-    setEnemyCards(updatedEnemyCards);
-    setDeck(updatedDeck);
-  };
-
-  const checkAndHandleBotCombination = () => {
+  const checkAndHandleBotCombination = useCallback(() => {
     if (!playAreaCards || !enemyCards || !deck) return;
 
     const playAreaGroups = playAreaCards.reduce<Record<number, Card[]>>(
@@ -229,7 +187,7 @@ export function useGameLogic(initialDeck: Card[]) {
             enemyCards.length >= playAreaCombination.length &&
             enemyCards.every((card) => card.value === enemyCards[0].value)
         )
-        .map(([_, enemyCards]) => enemyCards.slice(0, playAreaCombination.length))
+        .map(([, enemyCards]) => enemyCards.slice(0, playAreaCombination.length))
         .flat();
 
       if (higherRankCards.length === playAreaCombination.length) {
@@ -243,30 +201,64 @@ export function useGameLogic(initialDeck: Card[]) {
           prev.filter((card) => !higherRankCards.includes(card))
         );
 
-        let updatedDeck = [...deck];
+        const updatedDeck = [...deck];
         const newEnemyCards: Card[] = [];
         for (let i = 0; i < higherRankCards.length; i++) {
           if (updatedDeck.length > 0) {
             newEnemyCards.push(updatedDeck.pop()!);
           }
         }
-
         setEnemyScore((score) => score + 1);
         setEnemyCards((prev) => [...prev, ...newEnemyCards]);
         setDeck(updatedDeck);
       }
     });
+  }, [playAreaCards, enemyCards, deck]);
+
+  useEffect(() => {
+    const botMoveInterval = setInterval(() => {
+      checkAndHandleBotCombination();
+    }, 5000);
+  
+    return () => clearInterval(botMoveInterval); 
+  }, [playAreaCards, enemyCards, deck, checkAndHandleBotCombination]);
+
+  const handleEnemyMove = (updatedPlayAreaCards: Card[], updatedDeck: Card[]) => {
+    if (enemyCards.length === 0) return;
+  
+    const cardGroups = enemyCards.reduce<Record<number, Card[]>>((groups, card) => {
+      if (!groups[card.value]) groups[card.value] = [];
+      groups[card.value].push(card);
+      return groups;
+    }, {});
+  
+    const worstCard = Object.entries(cardGroups)
+      .sort((a, b) => {
+        if (a[1].length !== b[1].length) return a[1].length - b[1].length;
+  
+        return parseInt(a[0], 10) - parseInt(b[0], 10);
+      })
+      .map(([, cards]) => cards[0])[0]; 
+  
+    updatedPlayAreaCards = [...updatedPlayAreaCards, worstCard];
+    const updatedEnemyCards = enemyCards.filter((card) => card !== worstCard);
+  
+    let newEnemyCard: Card | null = null;
+    if (updatedDeck.length > 0) {
+      newEnemyCard = updatedDeck.pop()!;
+      updatedEnemyCards.push(newEnemyCard);
+    }
+  
+    setPlayAreaCards(updatedPlayAreaCards);
+    setEnemyCards(updatedEnemyCards);
+    setDeck(updatedDeck);
   };
 
   return {
-    highlightedPlayAreaCards,
-    deck,
-    playerCards,
-    enemyCards,
-    playAreaCards,
-    score,
-    message,
-    handlePlayerMove,
-    handleTakeCombination
+    highlightedPlayAreaCards, isPlayerTurn, deck, playerCards, enemyCards,
+    playAreaCards, playerScore, enemyScore, score, message, setIsPlayerTurn,
+    setPlayAreaCards, setPlayerCards, setEnemyCards, setDeck, setPlayerScore,
+    setEnemyScore, handlePlayerMove, handleTakeCombination, handleEnemyMove,
+    checkAndHandleBotCombination
   };
 }
