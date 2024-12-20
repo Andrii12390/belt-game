@@ -22,3 +22,8 @@ body {
     box-shadow: 0 0 7px 2px rgba(255, 255, 0, 0.8);
   }
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}

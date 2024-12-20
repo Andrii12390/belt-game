@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="h-dvh">
+      <body className="h-dvh no-scrollbar ">
         {children}
       </body>
     </html>
