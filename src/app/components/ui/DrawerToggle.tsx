@@ -1,4 +1,3 @@
-import { IconButton } from "@mui/material";
 import { X, Menu } from "lucide-react";
 
 interface IDrawerToggleProps {

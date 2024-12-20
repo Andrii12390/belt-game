@@ -1,4 +1,3 @@
-import IconButton from '@mui/material/IconButton';
 import  { X } from "lucide-react";
 import { Drawer as MuiDrawer } from '@mui/material';
 import { ReactElement } from 'react';
