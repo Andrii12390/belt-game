@@ -34,13 +34,13 @@ export default function Game() {
           {message}
         </div>
       )}
-      <aside className="absolute top-3 left-3 font-bold text-2xl text-yellow-400">
+      <aside className="absolute top-3 left-3 font-bold text-2xl text-yellow-500">
         Score: {score[0]} | {score[1]}
       </aside>
 
       <DrawerToggle isOpen={drawerOpen} onClick={toggleDrawer} />
       <Drawer open={drawerOpen} onClose={toggleDrawer}>
-        <div className="h-full bg-green-800 flex items-center p-2 text-yellow-500">
+        <div className="h-dvh bg-green-800 flex items-center p-2 text-yellow-500">
           <IconButton onClick={redirectToHome}>
             <ArrowLeft className="text-yellow-500"/>
           </IconButton>

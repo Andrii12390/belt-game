@@ -12,10 +12,10 @@ interface IDrawerProps {
 export const Drawer = ({ open, onClose, children }: IDrawerProps) => {
   return (
     <MuiDrawer anchor="right" open={open} onClose={onClose}>
-      <aside className="w-80 h-full">
-        <IconButton onClick={onClose} className="absolute top-3 right-3">
+      <aside className="w-80 h-dvh">
+        <button onClick={onClose} className="absolute top-3 right-3">
           <X className="text-yellow-500" />
-        </IconButton>
+        </button>
         {children}
       </aside>
     </MuiDrawer>

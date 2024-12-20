@@ -8,8 +8,8 @@ interface IDrawerToggleProps {
 
 export const DrawerToggle = ({ isOpen, onClick }: IDrawerToggleProps) => {
   return (
-    <IconButton onClick={onClick} className="absolute -right-0 text-yellow-500">
+    <button onClick={onClick} className="absolute right-2 top-3 text-yellow-500">
       {isOpen ? <X /> : <Menu />}
-    </IconButton>
+    </button>
   );
 };
