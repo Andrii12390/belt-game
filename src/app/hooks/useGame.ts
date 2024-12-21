@@ -243,10 +243,11 @@ export function useGame(initialDeck: Card[]) {
     updatedPlayAreaCards = [...updatedPlayAreaCards, worstCard];
     const updatedEnemyCards = enemyCards.filter((card) => card !== worstCard);
   
-    let newEnemyCard: Card | null = null;
-    if (updatedDeck.length > 0) {
-      newEnemyCard = updatedDeck.pop()!;
-      updatedEnemyCards.push(newEnemyCard);
+    if (updatedDeck.length > 1) {
+      updatedEnemyCards.push(updatedDeck[updatedDeck.length - 2]);
+      updatedDeck = [...updatedDeck.slice(0, -2), updatedDeck.at(-1)!];
+    } else if (updatedDeck.length === 1) {
+      updatedEnemyCards.push(updatedDeck.pop()!);
     }
   
     setPlayAreaCards(updatedPlayAreaCards);
